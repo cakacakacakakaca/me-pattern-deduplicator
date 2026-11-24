@@ -1,0 +1,52 @@
+plugins { id 'java'; id 'net.minecraftforge.gradle' version '6.0.54' }
+group = 'dev.mepatterndedupe'
+version = '1.1.0'
+base { archivesName = 'me-pattern-deduplicator-1.20.1' }
+java { toolchain.languageVersion = JavaLanguageVersion.of(17) }
+minecraft { mappings channel: 'official', version: '1.20.1' }
+repositories { maven { url = 'https://modmaven.dev/' }; mavenCentral() }
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.20.1-47.1.47'
+    if (project.hasProperty('ae2MappedJar')) implementation files(project.property('ae2MappedJar'))
+    else implementation fg.deobf('appeng:appliedenergistics2-forge:15.4.10')
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+tasks.withType(JavaExec).configureEach { systemProperty 'file.encoding', 'UTF-8' }
+jar.finalizedBy('reobfJar')
+tasks.register('logicTest', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'dev.mepatterndedupe.LogicTest'
+    jvmArgs '-ea'
+}
+check.dependsOn logicTest
+if (project.hasProperty('smoke')) {
+    dependencies { runtimeOnly files(project.property('guideMappedJar')) }
+    minecraft.runs {
+        data {
+            workingDirectory project.file('build/smoke-run')
+            property 'forge.logging.console.level', 'info'
+            property 'mepatterndedupe.smoke', 'true'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', file('build/createSrgToMcp/output.srg').absolutePath
+            args '--mod', 'mepatterndedupe', '--all', '--output', file('build/smoke-generated').absolutePath
+            mods { mepatterndedupe { source sourceSets.main; source sourceSets.test } }
+        }
+    }
+    tasks.configureEach { if (name == 'runData') dependsOn 'createSrgToMcp' }
+}
+
+if (project.hasProperty('preview')) {
+    dependencies { runtimeOnly files(project.property('guideMappedJar')) }
+    minecraft.runs {
+        client {
+            workingDirectory project.file('build/preview-run')
+            property 'mepatterndedupe.preview', 'true'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', file('build/createSrgToMcp/output.srg').absolutePath
+            args '--width', '1280', '--height', '720'
+            mods { mepatterndedupe { source sourceSets.main; source sourceSets.test } }
+        }
+    }
+    tasks.configureEach { if (name == 'runClient') dependsOn 'createSrgToMcp' }
+}

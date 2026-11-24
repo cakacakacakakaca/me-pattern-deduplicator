@@ -1,0 +1,1 @@
+{"type":"minecraft:crafting_shaped","pattern":[" Q ","PNP"," L "],"key":{"Q":{"item":"ae2:certus_quartz_crystal"},"P":{"item":"ae2:blank_pattern"},"N":{"item":"ae2:network_tool"},"L":{"item":"ae2:logic_processor"}},"result":{"item":"mepatterndedupe:me_pattern_deduplicator"}}
